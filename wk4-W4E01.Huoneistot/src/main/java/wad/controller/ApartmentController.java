@@ -38,19 +38,16 @@ public class ApartmentController {
 
     @RequestMapping(method=RequestMethod.POST)
     public Apartment postApartment(@RequestBody Apartment apartment) {
-        System.out.println("Sisään: "+apartment);
         // check 
-        if (apartmentRepository.findByName(apartment.getName())==null){
+        String nimi=apartment.getName();
+        List<Apartment> lista = apartmentRepository.findByName(nimi);
+        
+        if (lista.isEmpty()){
+              
             return apartmentRepository.save(apartment); 
-        } 
-        return null; // mitä pitäisi palauttaa??
+       } 
+      return null; // mitä pitäisi palauttaa??
     }
-
-    /*
-    PUT osoitteeseen /books/{id}, missä {id} on yksittäisen kirjan
-    yksilöivä tunniste, muokataan kyseisen kirjan tietoja. Kirjan uudet
-    tiedot lähetetään osana pyyntöä.
-    */
     
     @RequestMapping(value="/{id}", method=RequestMethod.PUT)
     public Apartment putApartment(@RequestBody Apartment apartment, @PathVariable Long id) {
