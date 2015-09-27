@@ -4,11 +4,13 @@ import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 @Entity
 public class Apartment extends AbstractPersistable<Long> { //implements Comparable<Apartment> {
     
+    @NotBlank
     private String name;
 
     public Apartment() {
