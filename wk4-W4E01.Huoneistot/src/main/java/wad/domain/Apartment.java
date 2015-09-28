@@ -8,9 +8,10 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 @Entity
-public class Apartment extends AbstractPersistable<Long> { //implements Comparable<Apartment> {
+public class Apartment extends AbstractPersistable<Long> { 
     
     @NotBlank
+    @Column(unique = true)
     private String name;
 
     public Apartment() {

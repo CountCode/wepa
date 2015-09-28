@@ -12,9 +12,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Entity
 public class Person extends AbstractPersistable<Long> {
 
-    @NotBlank    
+    @NotBlank
+    @Column(unique = true)
     private String name;
     @NotBlank
+    @Column(unique = true)    
     private String username;
     @NotBlank
     private String password;
