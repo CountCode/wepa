@@ -13,9 +13,9 @@
                 <span th:text="${message.content}">msg</span>
             </li>
         </ol>
-            <form sec:authorize="hasRole('POSTER')" method="POST" th:action="@{/messages}" action="/messages">
+            <form sec:authorize="hasRole('ROLE_POSTER')" method="POST" th:action="@{/messages}" action="/messages">
                 <input type="text" name="content"/>
                 <input type="submit" value="Pow!"/>
-            </form>
+            </form>  
     </body>
 </html>
