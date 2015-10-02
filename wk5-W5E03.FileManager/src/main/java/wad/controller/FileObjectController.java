@@ -1,7 +1,12 @@
 package wad.controller;
 
 import java.io.IOException;
+import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,40 +31,40 @@ public class FileObjectController {
         return "files";
     }  
  
-    /*
-    @RequestMapping(value="{id}", method = RequestMethod.GET)
-    public String get(@PathVariable Long id, Model model) {
+    @Transactional
+    @RequestMapping(value="/{id}", method = RequestMethod.DELETE)
+    public String removeFile(@PathVariable Long id) {
+
+        fileObjectRepository.delete(id);
+       
+        return "redirect:/files";       
+    }   
+    
+    @RequestMapping(value="/{id}", method = RequestMethod.GET)
+    public ResponseEntity<byte[]> viewFile(@PathVariable Long id) {
  
-        model.addAttribute("count", fileObjectRepository.count());
-        if (fileObjectRepository.exists(id+1)) model.addAttribute("next", id+1);
-        if (fileObjectRepository.exists(id-1)) model.addAttribute("previous", id-1);
-        if (fileObjectRepository.exists(id)) model.addAttribute("current", id);
+        FileObject fo = fileObjectRepository.findOne(id);
+
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(fo.getContentType()));
+        headers.add("Content-Disposition", "attachment; filename=" + fo.getName());
         
-        return "files";
+        return new ResponseEntity<>(fo.getContent(), headers, HttpStatus.CREATED);
     }
 
-    @RequestMapping(value="{id}/content", method = RequestMethod.GET, produces = "image/gif")
-    @ResponseBody
-    public byte[] get(@PathVariable Long id) {
-      
-        return fileObjectRepository.findOne(id).getContent();
-
-    }
-    */
+    @Transactional    
     @RequestMapping(method = RequestMethod.POST)
     public String save(@RequestParam("file") MultipartFile file) throws IOException {
         
         FileObject fo = new FileObject();
 
-        fo.setName(file.getName());
+        fo.setName(file.getOriginalFilename());
         fo.setContentType(file.getContentType());
         fo.setContentLength(file.getSize());
-       // fo.setContent(file.getBytes());
+        fo.setContent(file.getBytes());
 
         fileObjectRepository.save(fo);
 
         return "redirect:/files";    
-
     }
-
 }
