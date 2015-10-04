@@ -17,10 +17,4 @@ public class DefaultController {
     public String handleDefault() {
         return "redirect:/messages";
     }
-    
-    @RequestMapping(value="/error")
-    public String error(Model model) {
-        model.addAttribute("messages", messageRepository.findAll());
-        return "messages";
-    }       
 }

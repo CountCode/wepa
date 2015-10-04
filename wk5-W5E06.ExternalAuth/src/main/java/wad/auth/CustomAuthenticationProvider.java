@@ -54,10 +54,11 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             List<GrantedAuthority> grantedAuths = new ArrayList<>();
             grantedAuths.add(new SimpleGrantedAuthority("USER")); // or ROLE_USER ???
             return new UsernamePasswordAuthenticationToken(username, password, grantedAuths);                        
-        } else  {       
+        } else if (loginResponse.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+            
             throw new AuthenticationException("Unable to auth against third party systems") {};
         }
-   //     return null;
+       return null;
     }
   
     
