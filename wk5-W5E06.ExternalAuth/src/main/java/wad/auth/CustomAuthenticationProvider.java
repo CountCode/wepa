@@ -1,7 +1,9 @@
 package wad.auth;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -17,7 +19,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import org.json.JSONObject;
+import wad.domain.Person;
 
 
 @Component
@@ -32,36 +34,23 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     }
 
     @Override
-    public Authentication authenticate(Authentication a) throws AuthenticationException {
+    public Authentication authenticate(Authentication a) throws AuthenticationException{
         
-        String username = a.getName();
-        String password = a.getCredentials().toString();
-       
-        JSONObject request = new JSONObject();
-        request.put("username", username);
-        request.put("password", password);
+        Person person= new Person(); 
+        person.setUsername(a.getName());
+        person.setPassword(a.getCredentials().toString());
         
-        // set headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<String>(request.toString(), headers);
-
-        // send request and parse result
-        ResponseEntity<String> loginResponse = restTemplate
-            .exchange(AUTH_URI, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> loginResponse = restTemplate.postForEntity(AUTH_URI, person, String.class); 
+     //   ResponseEntity<String> loginResponse = restTemplate.exchange(AUTH_URI, HttpMethod.POST, entity, String.class); 
         
         if (loginResponse.getStatusCode() == HttpStatus.OK) {
             List<GrantedAuthority> grantedAuths = new ArrayList<>();
             grantedAuths.add(new SimpleGrantedAuthority("USER")); // or ROLE_USER ???
-            return new UsernamePasswordAuthenticationToken(username, password, grantedAuths);                        
-        } else if (loginResponse.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+            return new UsernamePasswordAuthenticationToken(person.getUsername(), person.getPassword(), grantedAuths);
             
-            throw new AuthenticationException("Unable to auth against third party systems") {};
-        }
-       return null;
+        } else return null;
     }
   
-    
     @Override
     public boolean supports(Class<?> type) {
         return true;
