@@ -18,57 +18,44 @@ private RememberMeTokenRepository rememberMeTokenRepository;
     
     @Override
     public void createNewToken(PersistentRememberMeToken token) {
-        CustomPersistentToken newToken = new CustomPersistentToken(token.getUsername(), token.getSeries(), token.getTokenValue(), token.getDate());
-        rememberMeTokenRepository.save(newToken);
-	//getJpaTemplate().update(token.getUsername(), token.getSeries(), token.getTokenValue(), token.getDate());                
+        List<CustomPersistentToken> tokens =rememberMeTokenRepository.findBySeries(token.getSeries());
+        if (tokens.isEmpty()) {
+            CustomPersistentToken newToken = new CustomPersistentToken(token.getUsername(), token.getSeries(), token.getTokenValue(), token.getDate());
+            rememberMeTokenRepository.save(newToken);
+        } else {
+            removeUserTokens(token.getUsername());
+        }
     }
 
     @Override
     @Transactional
     public void updateToken(String series, String tokenValue, Date lastUsed) {
-        CustomPersistentToken token = rememberMeTokenRepository.findBySeries(series);
+        List<CustomPersistentToken> tokens =rememberMeTokenRepository.findBySeries(series);
+        //check that the List is not empty and has only one token
+        CustomPersistentToken token = tokens.remove(0);
         token.setTokenValue(tokenValue);
         token.setLastUsed(lastUsed);
-        
-    /*    getJpaTemplate().update(updateTokenSql, tokenValue, lastUsed, series); */
+
+        // rememberMeTokenRepository.sabe(token)  I think the transactinal does the same?
     }
 
     @Override
     public PersistentRememberMeToken getTokenForSeries(String series) {
-		try {
-                    CustomPersistentToken token = rememberMeTokenRepository.findBySeries(series);
-                    return token;
-			return getJpaTemplate().queryForObject(tokensBySeriesSql,
-					new RowMapper<PersistentRememberMeToken>() {
-						public PersistentRememberMeToken mapRow(ResultSet rs, int rowNum)
-								throws SQLException {
-							return new PersistentRememberMeToken(rs.getString(1), rs
-									.getString(2), rs.getString(3), rs.getTimestamp(4));
-						}
-					}, seriesId);
-		}
-		catch (EmptyResultDataAccessException zeroResults) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Querying token for series '" + seriesId
-						+ "' returned no results.", zeroResults);
-			}
-		}
-		catch (IncorrectResultSizeDataAccessException moreThanOne) {
-			logger.error("Querying token for series '" + seriesId
-					+ "' returned more than one value. Series" + " should be unique");
-		}
-		catch (DataAccessException e) {
-			logger.error("Failed to load token for series " + seriesId, e);
-		}
-
-		return null;
+                    List<CustomPersistentToken> tokens = rememberMeTokenRepository.findBySeries(series);
+                    if (tokens.isEmpty() || tokens.size()>1) {
+                        tokens.removeAll(tokens);
+                        return null;
+                    }
+                    CustomPersistentToken token = tokens.remove(0);
+                    PersistentRememberMeToken pRMToken = new PersistentRememberMeToken(token.getUsername(), token.getSeries(), token.getTokenValue(), token.getLastUsed());
+                    return pRMToken;	
 	}
 
     @Override
     @Transactional    
     public void removeUserTokens(String username) {
-       // List<CustomPersistentToken> token = rememberMeTokenRepository.findByUsername(username);
-        rememberMeTokenRepository.delete(username);
-   /*     getJpaTemplate().update(removeUserTokensSql, username); */
+
+        List<CustomPersistentToken> token = rememberMeTokenRepository.findByUsername(username);
+        rememberMeTokenRepository.delete(token);
     }
 }
