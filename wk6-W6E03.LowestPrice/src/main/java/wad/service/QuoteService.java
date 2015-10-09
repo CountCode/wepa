@@ -22,7 +22,7 @@ public class QuoteService {
     @Autowired
     private AsyncTaskExecutor taskExecutor;
 
-    public BaseService getLowestPriceService(final String item) {
+    public BaseService getLowestPriceService(final String item) throws Exception{
 
         BaseService lowestPriceService = null;
         Double lowest = null;
@@ -35,22 +35,20 @@ public class QuoteService {
                 public BaseService call(){
                     Double price = service.getLowestPrice(item);
                     
-                    return price;
+                    return service;
                 }
             }));
         }
        
-        for (Future<BaseService> result: results) {
-            BaseService service = result.get();
+        for (Future<BaseService> result: results){
+            BaseService service = result.get();      
+            
+            Double price = service.getLowestPrice(item);
             if (lowest == null || lowest > price) {
                 lowest = price;
                 lowestPriceService = service;
-            }
-        }       
+            }       
         }
-
-        
         return lowestPriceService;
-
     }
 }
