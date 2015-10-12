@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,19 +63,31 @@ public class ImageController {
     }
     
     @RequestMapping(value = {"/thumbnails/{id}", "/originals/{id}"}, method = RequestMethod.GET)
-    public ResponseEntity<byte[]> getImage(
+    public ResponseEntity<byte[]> getImage( @RequestHeader(value="If-None-Match", required=false) String header,
             @PathVariable String id) {
-
-        return createResponseEntity(fileRepository.findOne(id));
+        if (header!=null){  
+            
+            final HttpHeaders headers = new HttpHeaders();
+            //headers.setContentType(MediaType.parseMediaType(fo.getContentType()));
+            //headers.setContentLength(fo.getContentLength());
+            //headers.setETag(imageRepository.findOne(id).geteTag());
+            
+            headers.setETag("\""+id+"\"");
+            headers.setCacheControl("public");
+            headers.setExpires(Long.MAX_VALUE);           
+            return new ResponseEntity<>(headers, HttpStatus.NOT_MODIFIED);                    
+        }
+        return createResponseEntity(fileRepository.findOne(id), id);
     }
 
-    private ResponseEntity<byte[]> createResponseEntity(FileObject fo) {
+    private ResponseEntity<byte[]> createResponseEntity(FileObject fo, String id) {
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(fo.getContentType()));
         headers.setContentLength(fo.getContentLength());
         headers.setCacheControl("public");
         headers.setExpires(Long.MAX_VALUE);
-
+        //headers.setETag(imageRepository.findOne(fo.getId()).geteTag());
+        headers.setETag("\""+id+"\"");
         return new ResponseEntity<>(fo.getContent(), headers, HttpStatus.CREATED);
     }
 }
